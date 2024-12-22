@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 cmake_minimum_required(VERSION 3.28...3.31)
 
 project(beman_task VERSION 1.0 LANGUAGES CXX)
@@ -43,5 +44,7 @@ target_sources(beman_task
 add_library(beman::task ALIAS beman_task)
 
 if (PROJECT_IS_TOP_LEVEL)
+  include(CTest)
+  enable_testing()
   add_subdirectory(tests)
 endif()

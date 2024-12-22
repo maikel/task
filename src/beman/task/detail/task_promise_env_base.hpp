@@ -3,7 +3,6 @@
 #ifndef BEMAN_TASK_DETAIL_TASK_PROMISE_ENV_BASE_HPP
 #define BEMAN_TASK_DETAIL_TASK_PROMISE_ENV_BASE_HPP
 
-#include <beman/task/detail/any_env.hpp>
 #include <beman/task/detail/any_receiver_ref.hpp>
 #include <beman/task/detail/any_scheduler.hpp>
 #include <beman/task/detail/join_envs.hpp>
@@ -13,32 +12,32 @@
 
 namespace beman::task::detail {
 
-template <class Derived, class... Queries> class task_promise_env_base {
+template <class CompletionSigs, class... Queries> class task_promise_env_base {
  public:
   task_promise_env_base() noexcept = default;
 
-  template <class Env>
-  void set_env(Env env, ::beman::execution26::inplace_stop_token stop_token) noexcept {
-    env_ = ::std::move(env);
-    stop_token_ = ::std::move(stop_token);
+  template <class Receiver>
+  void set_receiver(Receiver& receiver,
+                    ::beman::execution26::inplace_stop_token stop_token) noexcept {
+    this->receiver_ = receiver;
+    this->stop_token_ = ::std::move(stop_token);
   }
 
   auto get_env() const noexcept {
     return ::beman::task::detail::join_envs(
-        env_, ::beman::task::detail::with_query(::beman::execution26::get_stop_token, stop_token_));
+        ::beman::execution26::get_env(this->receiver_),
+        ::beman::task::detail::with_query(::beman::execution26::get_stop_token, this->stop_token_));
   }
 
-  template <class Value>
-  auto await_transform(Value&& value) -> ::beman::execution26::detail::call_result_t<
-                                          ::beman::execution26::as_awaitable_t, Value, Promise&> {
+  template <class Self, class Value>
+  auto await_transform(this Self& self, Value&& value)
+      -> ::beman::execution26::detail::call_result_t<::beman::execution26::as_awaitable_t, Value,
+                                                     Self&> {
     return ::beman::execution26::as_awaitable(
-        ::beman::execution26::continues_on(::std::forward<Value>(value), this->scheduler_),
-        static_cast<Promise&>(*this));
+        ::beman::execution26::continues_on(::std::forward<Value>(value), self.scheduler_), self);
   }
 
- private:
-  ::beman::task::detail::any_env<Queries...> env_;
-  ::beman::task::detail::any_scheduler scheduler_;
+  ::beman::task::detail::any_receiver_ref<CompletionSigs, any_env<Queries...>> receiver_;
   ::beman::execution26::inplace_stop_token stop_token_;
 };
 

@@ -6,8 +6,7 @@ if (NOT TARGET beman::task)
   find_package(beman_task)
 endif()
 
-include(CTest)
-enable_testing()
+add_executable(task.test task.test.cpp)
+target_link_libraries(task.test PRIVATE beman::task)
 
-add_executable(task task.test.cpp)
-target_link_libraries(task PRIVATE beman::task)
+add_test(NAME task COMMAND task.test)
