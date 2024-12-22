@@ -33,7 +33,7 @@ template <class Ret, class... Queries> class basic_task {
     explicit operation(::std::coroutine_handle<promise_type> handle, Receiver receiver) noexcept
         : receiver_{receiver}
         , handle_{handle} {
-      handle_.promise().set_receiver(this->receiver_, stop_source_.get_token());
+      handle_.promise().set_receiver(this->receiver_, this->receiver_.stop_source_.get_token());
     }
 
     ~operation() {
@@ -43,29 +43,62 @@ template <class Ret, class... Queries> class basic_task {
     }
 
     void start() noexcept {
-      auto stop_token =
-          ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver_));
-      if (stop_token.stop_requested()) {
-        ::beman::execution26::set_stopped(std::move(this->receiver_));
-      }
-      this->stop_callback_.emplace(stop_token, callback_type{*this});
+      receiver_.start();
       handle_.resume();
     }
 
    private:
-    struct callback_type {
-      operation& op;
-      void operator()() const noexcept { this->op.stop_source_.request_stop(); }
+    struct task_receiver {
+      using receiver_concept = ::beman::execution26::receiver_t;
+
+      explicit task_receiver(Receiver receiver) noexcept
+          : receiver_{std::move(receiver)} {}
+
+      template <class... Args> void set_value(Args&&... args) && noexcept {
+        this->stop_callback_.reset();
+        ::beman::execution26::set_value(std::move(this->receiver_), std::forward<Args>(args)...);
+      }
+
+      void set_error(std::exception_ptr err) && noexcept {
+        this->stop_callback_.reset();
+        ::beman::execution26::set_error(std::move(this->receiver_), std::move(err));
+      }
+
+      void set_stopped() && noexcept {
+        this->stop_callback_.reset();
+        ::beman::execution26::set_stopped(std::move(this->receiver_));
+      }
+
+      auto get_env() const noexcept -> beman::execution26::env_of_t<Receiver> {
+        return ::beman::execution26::get_env(this->receiver_);
+      }
+
+      struct callback_type {
+        task_receiver& self;
+        void operator()() const noexcept { this->self.stop_source_.request_stop(); }
+      };
+
+      using stop_token_type =
+          ::beman::execution26::stop_token_of_t<::beman::execution26::env_of_t<Receiver>>;
+      using stop_callback_type =
+          ::beman::execution26::stop_callback_for_t<stop_token_type, callback_type>;
+
+      void start() noexcept {
+        auto stop_token =
+            ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver_));
+        if (stop_token.stop_requested()) {
+          ::beman::execution26::set_stopped(std::move(this->receiver_));
+        }
+        this->stop_callback_.emplace(stop_token, callback_type{*this});
+      }
+
+      Receiver receiver_;
+      ::beman::execution26::inplace_stop_source stop_source_{};
+      [[no_unique_address]]
+      ::beman::task::detail::manual_lifetime<stop_callback_type> stop_callback_{};
     };
-    using stop_token_type =
-        ::beman::execution26::stop_token_of_t<::beman::execution26::env_of_t<Receiver>>;
-    using stop_callback_type =
-        ::beman::execution26::stop_callback_for_t<stop_token_type, callback_type>;
-    Receiver receiver_;
+    task_receiver receiver_;
     ::std::coroutine_handle<promise_type> handle_{};
-    ::beman::execution26::inplace_stop_source stop_source_{};
-    [[no_unique_address]]
-    ::beman::task::detail::manual_lifetime<stop_callback_type> stop_callback_;
   };
 
  public:
@@ -94,7 +127,12 @@ template <class Ret, class... Queries> class basic_task {
     return *this;
   }
 
-  template <class Receiver> auto connect(Receiver receiver) && noexcept -> operation<Receiver> {
+  template <class Receiver>
+    requires ::beman::execution26::receiver_of<Receiver, completion_signatures> &&
+                 (::beman::task::detail::has_query_for<::beman::execution26::env_of_t<Receiver>,
+                                                       Queries> &&
+                  ...)
+  auto connect(Receiver receiver) && noexcept -> operation<Receiver> {
     return operation<Receiver>{std::exchange(handle_, {}), ::std::move(receiver)};
   }
 
@@ -110,6 +148,11 @@ class basic_task<Ret, Queries...>::promise_type
     : public ::beman::task::detail::task_promise_result_base<Ret, basic_task::completion_signatures,
                                                              Queries...> {
  public:
+  auto unhandled_stopped() noexcept -> ::std::coroutine_handle<> {
+    ::beman::execution26::set_stopped(this->receiver_);
+    return ::std::noop_coroutine();
+  }
+
   auto get_return_object() noexcept -> basic_task {
     return basic_task{::std::coroutine_handle<promise_type>::from_promise(*this)};
   }

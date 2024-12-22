@@ -25,10 +25,13 @@ class receiver_completion_function_impl<Derived, Receiver, CompletionSigs, Env, 
                                         Sigs...>
     : public receiver_completion_function_impl<Derived, Receiver, CompletionSigs, Env, Sigs...> {
  public:
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Woverloaded-virtual"
   void set_complete(Tag tag, Args... args) noexcept override {
     Receiver* receiver = static_cast<Derived*>(this)->receiver_;
     tag(std::move(*receiver), std::forward<Args>(args)...);
   }
+#pragma clang diagnostic pop
 
  protected:
   ~receiver_completion_function_impl() = default;

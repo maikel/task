@@ -7,9 +7,18 @@
 
 namespace beman::task::detail {
 
-template <class Sig> class receiver_completion_function;
-template <class Tag, class... Args> class receiver_completion_function<Tag(Args...)> {
+template <class... Sigs> class receiver_completion_function;
+
+template <> class receiver_completion_function<> {
  public:
+  void set_complete() noexcept {}
+};
+
+template <class Tag, class... Args, class... Sigs>
+class receiver_completion_function<Tag(Args...), Sigs...>
+    : public receiver_completion_function<Sigs...> {
+ public:
+  using receiver_completion_function<Sigs...>::set_complete;
   virtual void set_complete(Tag, Args...) noexcept = 0;
 
  protected:
@@ -20,10 +29,9 @@ template <class CompletionSigs, class Env> class receiver_interface;
 
 template <class Env, class... Sigs>
 class receiver_interface<::beman::execution26::completion_signatures<Sigs...>, Env>
-    : public ::beman::task::detail::receiver_completion_function<Sigs>... {
+    : public ::beman::task::detail::receiver_completion_function<Sigs...> {
  public:
-  using ::beman::task::detail::receiver_completion_function<Sigs>::set_complete...;
-
+  using ::beman::task::detail::receiver_completion_function<Sigs...>::set_complete;
   virtual auto get_env() const noexcept -> Env = 0;
 
  protected:

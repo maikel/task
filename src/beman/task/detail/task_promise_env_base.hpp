@@ -33,8 +33,8 @@ template <class CompletionSigs, class... Queries> class task_promise_env_base {
   auto await_transform(this Self& self, Value&& value)
       -> ::beman::execution26::detail::call_result_t<::beman::execution26::as_awaitable_t, Value,
                                                      Self&> {
-    return ::beman::execution26::as_awaitable(
-        ::beman::execution26::continues_on(::std::forward<Value>(value), self.scheduler_), self);
+    return ::beman::execution26::as_awaitable(::std::forward<Value>(value), self);
+    // ::beman::execution26::continues_on(, self.scheduler_), self);
   }
 
   ::beman::task::detail::any_receiver_ref<CompletionSigs, any_env<Queries...>> receiver_;
