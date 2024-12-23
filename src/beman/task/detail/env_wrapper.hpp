@@ -18,18 +18,14 @@ class env_wrapper final
   explicit env_wrapper(Env env) noexcept
       : env_{std::move(env)} {}
 
-  env_wrapper(const env_wrapper& other) noexcept
-      : env_{other.env_} {}
-  env_wrapper(env_wrapper&& other) noexcept
-      : env_{std::move(other.env_)} {}
-  env_wrapper& operator=(const env_wrapper& other) noexcept {
-    env_ = other.env_;
-    return *this;
-  }
-  env_wrapper& operator=(env_wrapper&& other) noexcept {
-    env_ = std::move(other.env_);
-    return *this;
-  }
+  env_wrapper(const env_wrapper& other) noexcept = default;
+
+  env_wrapper(env_wrapper&& other) noexcept = default;
+
+  env_wrapper& operator=(const env_wrapper& other) noexcept = default;
+  env_wrapper& operator=(env_wrapper&& other) noexcept = default;
+
+  ~env_wrapper() = default;
 
   template <class Tag, class... Args> auto do_query(Tag tag, Args&&... args) const noexcept {
     return env_.query(tag, std::forward<Args>(args)...);

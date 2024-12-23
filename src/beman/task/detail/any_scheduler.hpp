@@ -19,6 +19,11 @@ namespace beman::task::detail {
 class any_scheduler {
  private:
   struct operation_interface {
+    operation_interface() noexcept = default;
+    operation_interface(const operation_interface&) = default;
+    operation_interface& operator=(const operation_interface&) = default;
+    operation_interface(operation_interface&&) = default;
+    operation_interface& operator=(operation_interface&&) = default;
     virtual ~operation_interface() = default;
     virtual void start() noexcept = 0;
   };
@@ -40,11 +45,18 @@ class any_scheduler {
         ::beman::execution26::set_value_t(), ::beman::execution26::set_error_t(std::exception_ptr),
         ::beman::execution26::set_stopped_t()>;
 
+    using any_receiver_ref =
+        ::beman::task::detail::any_receiver_ref<completion_signatures,
+                                                ::beman::execution26::empty_env>;
+
+    sender_interface() noexcept = default;
+    sender_interface(const sender_interface&) = default;
+    sender_interface& operator=(const sender_interface&) = default;
+    sender_interface(sender_interface&&) = default;
+    sender_interface& operator=(sender_interface&&) = default;
     virtual ~sender_interface() = default;
 
-    virtual auto connect(::beman::task::detail::any_receiver_ref<completion_signatures,
-                                                                 ::beman::execution26::empty_env>
-                             receiver) -> std::unique_ptr<operation_interface> = 0;
+    virtual auto connect(any_receiver_ref receiver) -> std::unique_ptr<operation_interface> = 0;
 
     virtual auto get_completion_scheduler() const noexcept -> any_scheduler = 0;
   };
@@ -54,9 +66,8 @@ class any_scheduler {
     explicit sender_implementation(Sender sender) noexcept
         : sender_{std::move(sender)} {}
 
-    auto connect(::beman::task::detail::any_receiver_ref<sender_interface::completion_signatures,
-                                                         ::beman::execution26::empty_env>
-                     receiver) -> std::unique_ptr<operation_interface> override {
+    auto connect(sender_interface::any_receiver_ref receiver)
+        -> std::unique_ptr<operation_interface> override {
       using Receiver =
           ::beman::task::detail::any_receiver_ref<sender_interface::completion_signatures,
                                                   ::beman::execution26::empty_env>;
@@ -81,7 +92,7 @@ class any_scheduler {
 
     schedule_operation(std::unique_ptr<sender_interface> sender, Receiver receiver)
         : receiver_(std::move(receiver))
-        , operation_(sender->connect(receiver_)) {}
+        , operation_(sender->connect(sender_interface::any_receiver_ref{receiver_})) {}
 
    private:
     class receiver_ref {
@@ -152,6 +163,12 @@ class any_scheduler {
         ::beman::execution26::set_value_t(), ::beman::execution26::set_error_t(std::exception_ptr),
         ::beman::execution26::set_stopped_t()>;
 
+    schedule_sender() noexcept = default;
+
+    schedule_sender(const schedule_sender& other) = delete;
+
+    schedule_sender& operator=(const schedule_sender& other) = delete;
+
     schedule_sender(schedule_sender&& other) noexcept
         : sender_{std::move(other.sender_)} {}
 
@@ -159,6 +176,8 @@ class any_scheduler {
       sender_ = std::move(other.sender_);
       return *this;
     }
+
+    ~schedule_sender() = default;
 
     template <class OtherSender>
       requires(!std::same_as<std::remove_cvref_t<OtherSender>, schedule_sender>)
@@ -194,16 +213,34 @@ class any_scheduler {
 
   class scheduler_interface {
    public:
+    scheduler_interface() noexcept = default;
+    scheduler_interface(const scheduler_interface&) = default;
+    scheduler_interface& operator=(const scheduler_interface&) = default;
+    scheduler_interface(scheduler_interface&&) = default;
+    scheduler_interface& operator=(scheduler_interface&&) = default;
+    virtual ~scheduler_interface() = default;
+
     virtual auto schedule() -> schedule_sender = 0;
 
     virtual bool equal_to(const scheduler_interface& other) const noexcept = 0;
-
-    virtual ~scheduler_interface() = default;
   };
 
   template <class OtherScheduler> struct scheduler_implementation : scheduler_interface {
     explicit scheduler_implementation(OtherScheduler scheduler) noexcept
         : scheduler_{std::move(scheduler)} {}
+
+    scheduler_implementation(const scheduler_implementation& other)
+        : scheduler_{other.scheduler_} {}
+
+    scheduler_implementation(scheduler_implementation&& other) noexcept
+        : scheduler_{std::move(other.scheduler_)} {}
+
+    auto operator=(const scheduler_implementation& other) -> scheduler_implementation& = default;
+
+    auto
+    operator=(scheduler_implementation&& other) noexcept -> scheduler_implementation& = default;
+
+    ~scheduler_implementation() override = default;
 
     auto schedule() -> schedule_sender override {
       return schedule_sender{::beman::execution26::schedule(scheduler_)};
@@ -230,38 +267,35 @@ class any_scheduler {
   using scheduler_concept = ::beman::execution26::scheduler_t;
 
   any_scheduler() noexcept = default;
+
   any_scheduler(const any_scheduler& other) noexcept
       : storage_{other.storage_}
       , get_interface_{other.get_interface_} {}
+
   any_scheduler(any_scheduler&& other) noexcept
       : storage_{std::move(other.storage_)}
       , get_interface_{other.get_interface_} {}
-  any_scheduler& operator=(const any_scheduler& other) noexcept {
+
+  any_scheduler& operator=(const any_scheduler& other) noexcept { // NOLINT
     storage_ = other.storage_;
     get_interface_ = other.get_interface_;
     return *this;
   }
+
   any_scheduler& operator=(any_scheduler&& other) noexcept {
     storage_ = std::move(other.storage_);
     get_interface_ = other.get_interface_;
     return *this;
   }
 
-  template <class OtherSched>
-    requires(!std::same_as<std::remove_cvref_t<OtherSched>, any_scheduler>)
-  any_scheduler(OtherSched&& sched) noexcept
-      : storage_{scheduler_implementation<std::remove_cvref_t<OtherSched>>{
-            std::forward<OtherSched>(sched)}}
-      , get_interface_{get_interface_fn_<::std::remove_cvref_t<OtherSched>>} {}
+  ~any_scheduler() = default;
 
   template <class OtherSched>
     requires(!std::same_as<std::remove_cvref_t<OtherSched>, any_scheduler>)
-  any_scheduler& operator=(OtherSched&& sched) noexcept {
-    storage_ =
-        scheduler_implementation<std::remove_cvref_t<OtherSched>>{std::forward<OtherSched>(sched)};
-    get_interface_ = get_interface_fn_<::std::remove_cvref_t<OtherSched>>;
-    return *this;
-  }
+  explicit any_scheduler(OtherSched&& sched) noexcept
+      : storage_{scheduler_implementation<std::remove_cvref_t<OtherSched>>{
+            std::forward<OtherSched>(sched)}}
+      , get_interface_{get_interface_fn_<::std::remove_cvref_t<OtherSched>>} {}
 
   auto schedule() -> schedule_sender { return get_interface_(storage_).schedule(); }
 

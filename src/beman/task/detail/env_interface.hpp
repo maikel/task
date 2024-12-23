@@ -8,6 +8,12 @@
 namespace beman::task::detail {
 template <class... Queries> class env_interface : query_base<Queries>... {
  public:
+  env_interface() noexcept = default;
+  env_interface(const env_interface&) = default;
+  env_interface& operator=(const env_interface&) = default;
+  env_interface(env_interface&&) = default;
+  env_interface& operator=(env_interface&&) = default;
+
   using query_base<Queries>::query...;
 
  protected:

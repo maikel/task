@@ -31,6 +31,10 @@ template <class Tp> class manual_lifetime {
     empty_byte empty_;
     Tp value_;
     constexpr Storage() noexcept {}
+    constexpr Storage(const Storage&) noexcept {}
+    constexpr Storage& operator=(const Storage&) noexcept { return *this; } // NOLINT
+    constexpr Storage(Storage&&) noexcept {}
+    constexpr Storage& operator=(Storage&&) noexcept { return *this; }
     constexpr ~Storage() noexcept {}
   } storage_;
 };

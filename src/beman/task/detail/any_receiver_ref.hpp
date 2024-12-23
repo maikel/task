@@ -18,8 +18,7 @@ template <class CompletionSigs, class Env> class any_receiver_ref {
   template <class Receiver>
   inline static constexpr auto get_interface_fn_ =
       +[](std::any& storage) -> receiver_interface<CompletionSigs, Env>& {
-    receiver_implementation<Receiver, CompletionSigs, Env>* ptr =
-        ::std::any_cast<receiver_implementation<Receiver, CompletionSigs, Env>>(&storage);
+    auto* ptr = ::std::any_cast<receiver_implementation<Receiver, CompletionSigs, Env>>(&storage);
     assert(ptr);
     return *ptr;
   };
@@ -28,7 +27,7 @@ template <class CompletionSigs, class Env> class any_receiver_ref {
 
   template <class Receiver>
     requires(!::std::same_as<any_receiver_ref, Receiver>)
-  any_receiver_ref(Receiver& receiver) noexcept
+  explicit any_receiver_ref(Receiver& receiver)
       : storage_{receiver_implementation<Receiver, CompletionSigs, Env>{&receiver}}
       , get_interface_{get_interface_fn_<Receiver>} {}
 
@@ -37,10 +36,10 @@ template <class CompletionSigs, class Env> class any_receiver_ref {
       , get_interface_{other.get_interface_} {}
 
   any_receiver_ref(any_receiver_ref&& other) noexcept
-      : storage_{other.storage_}
+      : storage_{std::move(other.storage_)}
       , get_interface_{other.get_interface_} {}
 
-  any_receiver_ref& operator=(const any_receiver_ref& other) noexcept {
+  any_receiver_ref& operator=(const any_receiver_ref& other) noexcept { // NOLINT
     this->storage_ = &other.storage_;
     this->get_interface_ = other.get_interface_;
     return *this;
@@ -52,13 +51,7 @@ template <class CompletionSigs, class Env> class any_receiver_ref {
     return *this;
   }
 
-  template <class Receiver>
-    requires(!::std::same_as<any_receiver_ref, Receiver>)
-  any_receiver_ref& operator=(Receiver& receiver) noexcept {
-    this->storage_ = receiver_implementation<Receiver, CompletionSigs, Env>{&receiver};
-    this->get_interface_ = get_interface_fn_<Receiver>;
-    return *this;
-  }
+  ~any_receiver_ref() = default;
 
   template <class... Args> void set_value(Args&&... args) && noexcept {
     assert(this->get_interface_);

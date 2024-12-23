@@ -18,6 +18,12 @@ template <class Tag, class... Args, class... Sigs>
 class receiver_completion_function<Tag(Args...), Sigs...>
     : public receiver_completion_function<Sigs...> {
  public:
+  receiver_completion_function() noexcept = default;
+  receiver_completion_function(const receiver_completion_function&) = default;
+  receiver_completion_function& operator=(const receiver_completion_function&) = default;
+  receiver_completion_function(receiver_completion_function&&) = default;
+  receiver_completion_function& operator=(receiver_completion_function&&) = default;
+
   using receiver_completion_function<Sigs...>::set_complete;
   virtual void set_complete(Tag, Args...) noexcept = 0;
 
@@ -31,6 +37,12 @@ template <class Env, class... Sigs>
 class receiver_interface<::beman::execution26::completion_signatures<Sigs...>, Env>
     : public ::beman::task::detail::receiver_completion_function<Sigs...> {
  public:
+  receiver_interface() noexcept = default;
+  receiver_interface(const receiver_interface&) = default;
+  receiver_interface& operator=(const receiver_interface&) = default;
+  receiver_interface(receiver_interface&&) = default;
+  receiver_interface& operator=(receiver_interface&&) = default;
+
   using ::beman::task::detail::receiver_completion_function<Sigs...>::set_complete;
   virtual auto get_env() const noexcept -> Env = 0;
 

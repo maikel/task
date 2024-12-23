@@ -21,6 +21,7 @@ template <class... Queries> class any_env {
   any_env(any_env&& other) noexcept = default;
   any_env& operator=(const any_env& other) = default;
   any_env& operator=(any_env&& other) noexcept = default;
+  ~any_env() = default;
 
   template <class Env>
     requires(!::std::same_as<any_env, Env> &&

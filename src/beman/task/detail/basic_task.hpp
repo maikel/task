@@ -36,6 +36,11 @@ template <class Ret, class... Queries> class basic_task {
       handle_.promise().set_receiver(this->receiver_, this->receiver_.stop_source_.get_token());
     }
 
+    operation(const operation&) = delete;
+    operation& operator=(const operation&) = delete;
+    operation(operation&& other) = delete;
+    operation& operator=(operation&& other) = delete;
+
     ~operation() {
       if (handle_) {
         handle_.destroy();
@@ -59,9 +64,9 @@ template <class Ret, class... Queries> class basic_task {
         ::beman::execution26::set_value(std::move(this->receiver_), std::forward<Args>(args)...);
       }
 
-      void set_error(std::exception_ptr err) && noexcept {
+      void set_error(const std::exception_ptr& err) && noexcept {
         this->stop_callback_.reset();
-        ::beman::execution26::set_error(std::move(this->receiver_), std::move(err));
+        ::beman::execution26::set_error(std::move(this->receiver_), err);
       }
 
       void set_stopped() && noexcept {
@@ -111,6 +116,10 @@ template <class Ret, class... Queries> class basic_task {
     }
   }
 
+  basic_task(const basic_task&) = delete;
+
+  basic_task& operator=(const basic_task&) = delete;
+
   basic_task(basic_task&& other) noexcept
       : handle_{::std::exchange(other.handle_, {})} {}
 
@@ -134,7 +143,7 @@ template <class Ret, class... Queries> class basic_task {
   }
 
  private:
-  basic_task(::std::coroutine_handle<promise_type> handle) noexcept
+  explicit basic_task(::std::coroutine_handle<promise_type> handle) noexcept
       : handle_{handle} {}
 
   ::std::coroutine_handle<promise_type> handle_{};

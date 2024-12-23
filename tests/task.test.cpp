@@ -8,7 +8,7 @@
 
 #define ASSERT(...)                                                                                \
   if (!(__VA_ARGS__)) {                                                                            \
-    std::cerr << "Assertion failed: " #__VA_ARGS__ << std::endl;                                   \
+    std::cerr << "Assertion failed: " #__VA_ARGS__ << "\n";                                        \
     ::std::terminate();                                                                            \
   }
 
