@@ -1,0 +1,78 @@
+# .github/workflows/linux.yml
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Linux Build
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "include/**"
+      - "src/**"
+      - "tests/**"
+      - "examples/**"
+      - "cmake/**"
+      - "Makefile"
+      - "CMakePresets.json"
+      - "CMakeLists.txt"
+      - ".github/workflows/linux.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "include/**"
+      - "src/**"
+      - "tests/**"
+      - "examples/**"
+      - "cmake/**"
+      - "Makefile"
+      - "CMakePresets.json"
+      - "CMakeLists.txt"
+      - ".github/workflows/linux.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+
+      matrix:
+        # TODO: sanitizer: [debug, release, asan, usan, tsan, lsan, msan]
+        preset: [debug]
+        compiler: [clang++-19]
+
+    steps:
+      - uses: actions/checkout@master
+        with:
+          path: task29
+
+      - uses: actions/checkout@master
+        with:
+          repository: bemanproject/execution26
+          path: execution26
+
+      # - name: Install dependencies
+      #   run: |
+      #     wget -q https://github.com/Kitware/CMake/releases/download/v3.31.3/cmake-3.31.3-linux-x86_64.sh && \
+      #     chmod +x cmake-3.31.3-linux-x86_64.sh && \
+      #     sudo ./cmake-3.31.3-linux-x86_64.sh --skip-license --prefix=/usr
+
+      - name: Install build tools
+        run: |
+          sudo apt-get install cppcheck ninja-build -y -q
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 19 all
+
+      - name: Linux execution26 ${{ matrix.compiler }} ${{ matrix.preset }}
+        run: |
+          cd execution26
+          cmake --preset ${{ matrix.preset }} . -DCMAKE_GENERATOR="Ninja" -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_INSTALL_PREFIX="/usr/local"
+          cmake --build build/${{ matrix.preset }} --target execution26
+          sudo cmake --install build/${{ matrix.preset }}
+
+      - name: Linux task29 ${{ matrix.compiler }} ${{ matrix.preset }}
+        run: |
+          cd task29
+          cmake --preset ${{ matrix.compiler }}-${{ matrix.preset }} .
+          cmake --build build
+          ctest --test-dir build --output-on-failure
