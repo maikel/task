@@ -36,7 +36,7 @@
       "name": "clang-tidy",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_CXX_CLANG_TIDY": "clang-tidy-18;--header-filter=^${sourceDir}/"
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy-19;--header-filter=^${sourceDir}/"
       }
     },
     {
@@ -68,20 +68,36 @@
       "binaryDir": "build",
       "inherits": [
         "cmake-dev-mode",
+        "std"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+      }
+    },
+    {
+      "name": "clang++-19-debug",
+      "description": "Default configuration",
+      "displayName": "Default",
+      "hidden": false,
+      "generator": "Ninja",
+      "binaryDir": "build",
+      "inherits": [
+        "cmake-dev-mode",
         "std",
         "flags-gcc-clang",
         "cppcheck",
         "clang-tidy"
       ],
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "clang++-18",
+        "CMAKE_CXX_COMPILER": "clang++-19",
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g -stdlib=libc++ -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -fsanitize=address,undefined",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
       }
     },
     {
-      "name": "Release",
+      "name": "clang++-19-release",
       "description": "Release configuration",
       "displayName": "Release",
       "hidden": false,
@@ -93,8 +109,8 @@
         "flags-gcc-clang"
       ],
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-18",
-        "CMAKE_CXX_COMPILER": "clang++-18",
+        "CMAKE_C_COMPILER": "clang-19",
+        "CMAKE_CXX_COMPILER": "clang++-19",
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_FLAGS_RELEASE": "-O2 -DNDEBUG -stdlib=libc++ -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
