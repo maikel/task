@@ -86,9 +86,6 @@ template <class Ret, class... Queries> class basic_task {
       void start() noexcept {
         auto stop_token =
             ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver_));
-        if (stop_token.stop_requested()) {
-          ::beman::execution26::set_stopped(std::move(this->receiver_));
-        }
         this->stop_callback_.emplace(stop_token, callback_type{*this});
       }
 
