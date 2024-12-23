@@ -33,18 +33,22 @@ template <class CompletionSigs, class Env> class any_receiver_ref {
       , get_interface_{get_interface_fn_<Receiver>} {}
 
   any_receiver_ref(const any_receiver_ref& other) noexcept
-      : storage_{other.storage_} {}
+      : storage_{other.storage_}
+      , get_interface_{other.get_interface_} {}
 
   any_receiver_ref(any_receiver_ref&& other) noexcept
-      : storage_{other.storage_} {}
+      : storage_{other.storage_}
+      , get_interface_{other.get_interface_} {}
 
   any_receiver_ref& operator=(const any_receiver_ref& other) noexcept {
     this->storage_ = &other.storage_;
+    this->get_interface_ = other.get_interface_;
     return *this;
   }
 
   any_receiver_ref& operator=(any_receiver_ref&& other) noexcept {
     this->storage_ = std::move(other.storage_);
+    this->get_interface_ = other.get_interface_;
     return *this;
   }
 
@@ -57,20 +61,28 @@ template <class CompletionSigs, class Env> class any_receiver_ref {
   }
 
   template <class... Args> void set_value(Args&&... args) && noexcept {
+    assert(this->get_interface_);
+    assert(this->storage_.has_value());
     this->get_interface_(this->storage_)
         .set_complete(::beman::execution26::set_value, ::std::forward<Args>(args)...);
   }
 
   template <class Error> void set_error(Error&& error) && noexcept {
+    assert(this->get_interface_);
+    assert(this->storage_.has_value());
     this->get_interface_(this->storage_)
         .set_complete(::beman::execution26::set_error, ::std::forward<Error>(error));
   }
 
   void set_stopped() && noexcept {
+    assert(this->get_interface_);
+    assert(this->storage_.has_value());
     this->get_interface_(this->storage_).set_complete(::beman::execution26::set_stopped);
   }
 
   auto get_env() const noexcept -> Env {
+    assert(this->get_interface_);
+    assert(this->storage_.has_value());
     return this->get_interface_(const_cast<std::any&>(this->storage_)).get_env();
   }
 

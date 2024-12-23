@@ -250,13 +250,15 @@ class any_scheduler {
   template <class OtherSched>
     requires(!std::same_as<std::remove_cvref_t<OtherSched>, any_scheduler>)
   any_scheduler(OtherSched&& sched) noexcept
-      : storage_{std::forward<OtherSched>(sched)}
+      : storage_{scheduler_implementation<std::remove_cvref_t<OtherSched>>{
+            std::forward<OtherSched>(sched)}}
       , get_interface_{get_interface_fn_<::std::remove_cvref_t<OtherSched>>} {}
 
   template <class OtherSched>
     requires(!std::same_as<std::remove_cvref_t<OtherSched>, any_scheduler>)
   any_scheduler& operator=(OtherSched&& sched) noexcept {
-    storage_ = std::forward<OtherSched>(sched);
+    storage_ =
+        scheduler_implementation<std::remove_cvref_t<OtherSched>>{std::forward<OtherSched>(sched)};
     get_interface_ = get_interface_fn_<::std::remove_cvref_t<OtherSched>>;
     return *this;
   }
