@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #include <beman/task/task.hpp>
 
 #include <beman/execution26/execution.hpp>
@@ -31,8 +33,7 @@ beman::task::task<void> await_just_int() {
   co_return;
 }
 auto test_await_just_int() noexcept {
-  auto task = await_just_int();
-  auto result = ::beman::execution26::sync_wait(std::move(task));
+  auto result = ::beman::execution26::sync_wait(await_just_int());
   ASSERT(result);
 }
 
