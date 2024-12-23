@@ -3,9 +3,9 @@
 #ifndef BEMAN_TASK_DETAIL_RECEIVER_IMPLEMENTAITON_HPP
 #define BEMAN_TASK_DETAIL_RECEIVER_IMPLEMENTAITON_HPP
 
-#include <beman/execution26/execution.hpp>
-
 #include <beman/task/detail/receiver_interface.hpp>
+
+#include <beman/execution26/execution.hpp>
 
 namespace beman::task::detail {
 

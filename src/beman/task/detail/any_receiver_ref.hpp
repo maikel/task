@@ -3,10 +3,10 @@
 #ifndef BEMAN_TASK_DETAIL_ANY_RECEIVER_REF_HPP
 #define BEMAN_TASK_DETAIL_ANY_RECEIVER_REF_HPP
 
-#include <beman/execution26/execution.hpp>
-
 #include <beman/task/detail/receiver_implementation.hpp>
 #include <beman/task/detail/receiver_interface.hpp>
+
+#include <beman/execution26/execution.hpp>
 
 #include <concepts>
 

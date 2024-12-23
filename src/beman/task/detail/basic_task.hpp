@@ -3,8 +3,6 @@
 #ifndef BEMAN_TASK_BASIC_TASK_HPP
 #define BEMAN_TASK_BASIC_TASK_HPP
 
-#include <beman/execution26/execution.hpp>
-
 #include <beman/task/detail/any_env.hpp>
 #include <beman/task/detail/as_exception_ptr.hpp>
 #include <beman/task/detail/env_interface.hpp>
@@ -14,6 +12,8 @@
 #include <beman/task/detail/set_value_for.hpp>
 #include <beman/task/detail/task_promise_result_base.hpp>
 #include <beman/task/detail/with_query.hpp>
+
+#include <beman/execution26/execution.hpp>
 
 #include <any>
 #include <exception>
