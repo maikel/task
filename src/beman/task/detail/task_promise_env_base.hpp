@@ -27,7 +27,8 @@ template <class CompletionSigs, class... Queries> class task_promise_env_base {
   auto get_env() const noexcept {
     return ::beman::task::detail::join_envs(
         ::beman::execution26::get_env(this->receiver_),
-        ::beman::task::detail::with_query(::beman::execution26::get_stop_token, this->stop_token_));
+        ::beman::task::detail::with_query(::beman::execution26::get_stop_token, this->stop_token_),
+        ::beman::task::detail::with_query(::beman::execution26::get_scheduler, this->scheduler_));
   }
 
   template <class Self, class Value> auto await_transform(this Self& self, Value&& value) {

@@ -37,8 +37,19 @@ auto test_await_just_int() noexcept {
   ASSERT(result);
 }
 
+beman::task::task<void> await_an_int_task() {
+  auto value = co_await int_task();
+  ASSERT(value == 42);
+  co_return;
+}
+auto test_await_an_int_task() noexcept {
+  auto result = ::beman::execution26::sync_wait(await_an_int_task());
+  ASSERT(result);
+}
+
 int main() {
   test_void_task();
   test_int_task();
   test_await_just_int();
+  test_await_an_int_task();
 }

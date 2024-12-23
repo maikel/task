@@ -33,6 +33,12 @@ auto join_envs(const Env1& env1, const Env2& env2) noexcept -> joined_envs<Env1,
   return joined_envs<Env1, Env2>(env1, env2);
 }
 
+template <class Env1, class Env2, class... Envs>
+  requires(sizeof...(Envs) > 0)
+auto join_envs(const Env1& env1, const Env2& env2, const Envs&... envs) noexcept {
+  return join_envs(joined_envs<Env1, Env2>(env1, env2), envs...);
+}
+
 } // namespace beman::task::detail
 
 #endif
