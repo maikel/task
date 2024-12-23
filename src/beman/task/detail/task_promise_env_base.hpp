@@ -20,6 +20,7 @@ template <class CompletionSigs, class... Queries> class task_promise_env_base {
   void set_receiver(Receiver& receiver,
                     ::beman::execution26::inplace_stop_token stop_token) noexcept {
     this->receiver_ = receiver;
+    this->scheduler_ = ::beman::execution26::get_scheduler(::beman::execution26::get_env(receiver));
     this->stop_token_ = ::std::move(stop_token);
   }
 
@@ -29,15 +30,13 @@ template <class CompletionSigs, class... Queries> class task_promise_env_base {
         ::beman::task::detail::with_query(::beman::execution26::get_stop_token, this->stop_token_));
   }
 
-  template <class Self, class Value>
-  auto await_transform(this Self& self, Value&& value)
-      -> ::beman::execution26::detail::call_result_t<::beman::execution26::as_awaitable_t, Value,
-                                                     Self&> {
-    return ::beman::execution26::as_awaitable(::std::forward<Value>(value), self);
-    // ::beman::execution26::continues_on(, self.scheduler_), self);
+  template <class Self, class Value> auto await_transform(this Self& self, Value&& value) {
+    return ::beman::execution26::as_awaitable(
+        ::beman::execution26::continues_on(::std::forward<Value>(value), self.scheduler_), self);
   }
 
   ::beman::task::detail::any_receiver_ref<CompletionSigs, any_env<Queries...>> receiver_;
+  ::beman::task::detail::any_scheduler scheduler_;
   ::beman::execution26::inplace_stop_token stop_token_;
 };
 

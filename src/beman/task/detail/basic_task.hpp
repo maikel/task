@@ -149,7 +149,7 @@ class basic_task<Ret, Queries...>::promise_type
                                                              Queries...> {
  public:
   auto unhandled_stopped() noexcept -> ::std::coroutine_handle<> {
-    ::beman::execution26::set_stopped(this->receiver_);
+    ::beman::execution26::set_stopped(std::move(this->receiver_));
     return ::std::noop_coroutine();
   }
 
