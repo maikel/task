@@ -33,7 +33,7 @@ template <class Ret, class... Queries> class basic_task {
     explicit operation(::std::coroutine_handle<promise_type> handle, Receiver receiver) noexcept
         : receiver_{receiver}
         , handle_{handle} {
-      handle_.promise().set_receiver(this->receiver_, this->receiver_.stop_source_.get_token());
+      handle_.promise().connect(this->receiver_);
     }
 
     operation(const operation&) = delete;
@@ -74,8 +74,11 @@ template <class Ret, class... Queries> class basic_task {
         ::beman::execution26::set_stopped(std::move(this->receiver_));
       }
 
-      auto get_env() const noexcept -> beman::execution26::env_of_t<Receiver> {
-        return ::beman::execution26::get_env(this->receiver_);
+      auto get_env() const noexcept {
+        return ::beman::task::detail::join_envs(
+            ::beman::execution26::get_env(this->receiver_),
+            ::beman::task::detail::with_query(::beman::execution26::get_stop_token,
+                                              this->stop_source_.get_token()));
       }
 
       struct callback_type {

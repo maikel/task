@@ -19,13 +19,12 @@ template <class CompletionSigs, class... Queries> class task_promise_env_base {
 
   task_promise_env_base() noexcept = default;
 
-  template <class Receiver>
-  void set_receiver(Receiver& receiver,
-                    ::beman::execution26::inplace_stop_token stop_token) noexcept {
+  template <class Receiver> void connect(Receiver& receiver) noexcept {
+    auto&& env = ::beman::execution26::get_env(receiver);
     this->receiver_ = any_receiver_ref{receiver};
-    this->scheduler_ = ::beman::task::detail::any_scheduler{
-        ::beman::execution26::get_scheduler(::beman::execution26::get_env(receiver))};
-    this->stop_token_ = stop_token;
+    this->scheduler_ =
+        ::beman::task::detail::any_scheduler{::beman::execution26::get_scheduler(env)};
+    this->stop_token_ = ::beman::execution26::get_stop_token(env);
   }
 
   auto get_env() const noexcept {

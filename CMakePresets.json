@@ -77,8 +77,8 @@
     },
     {
       "name": "clang++-19-debug",
-      "description": "Default configuration",
-      "displayName": "Default",
+      "description": "clang++-19-debug configuration",
+      "displayName": "clang++-19-debug",
       "hidden": false,
       "generator": "Ninja",
       "binaryDir": "build",
@@ -91,6 +91,25 @@
       ],
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++-19",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g -stdlib=libc++ -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -fsanitize=address,undefined",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+      }
+    },
+    {
+      "name": "clang++-18-debug",
+      "description": "clang++-18-debug configuration",
+      "displayName": "clang++-18-debug",
+      "hidden": false,
+      "generator": "Ninja",
+      "binaryDir": "build",
+      "inherits": [
+        "cmake-dev-mode",
+        "std",
+        "flags-gcc-clang"
+      ],
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++-18",
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g -stdlib=libc++ -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG -fsanitize=address,undefined",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
