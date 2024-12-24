@@ -12,6 +12,7 @@
     ::std::terminate();                                                                            \
   }
 
+namespace {
 beman::task::task<void> void_task() { co_return; }
 auto test_void_task() noexcept {
   auto task = void_task();
@@ -46,6 +47,7 @@ auto test_await_an_int_task() noexcept {
   auto result = ::beman::execution26::sync_wait(await_an_int_task());
   ASSERT(result);
 }
+} // namespace
 
 int main() {
   test_void_task();
