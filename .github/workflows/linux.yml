@@ -32,6 +32,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    container: silkeh/clang:19
     strategy:
       fail-fast: false
 
@@ -50,25 +51,23 @@ jobs:
           repository: bemanproject/execution26
           path: execution26
 
-      # - name: Install dependencies
-      #   run: |
-      #     wget -q https://github.com/Kitware/CMake/releases/download/v3.31.3/cmake-3.31.3-linux-x86_64.sh && \
-      #     chmod +x cmake-3.31.3-linux-x86_64.sh && \
-      #     sudo ./cmake-3.31.3-linux-x86_64.sh --skip-license --prefix=/usr
+      - name: Install dependencies
+        run: |
+          wget -q https://github.com/Kitware/CMake/releases/download/v3.31.3/cmake-3.31.3-linux-x86_64.sh && \
+          chmod +x cmake-3.31.3-linux-x86_64.sh && \
+          ./cmake-3.31.3-linux-x86_64.sh --skip-license --prefix=/usr
 
       - name: Install build tools
         run: |
-          sudo apt-get install cppcheck ninja-build -y -q
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 19 all
+          apt-get update -y -q
+          apt-get install cppcheck ninja-build -y -q
 
       - name: Linux execution26 ${{ matrix.compiler }} ${{ matrix.preset }}
         run: |
           cd execution26
           cmake --preset ${{ matrix.preset }} . -DCMAKE_GENERATOR="Ninja" -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_INSTALL_PREFIX="/usr/local"
           cmake --build build/${{ matrix.preset }} --target execution26
-          sudo cmake --install build/${{ matrix.preset }}
+          cmake --install build/${{ matrix.preset }}
 
       - name: Linux task29 ${{ matrix.compiler }} ${{ matrix.preset }}
         run: |
