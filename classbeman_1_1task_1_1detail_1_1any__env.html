@@ -75,6 +75,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classbeman_1_1task_1_1detail_1_1any__env-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">beman::task::detail::any_env&lt; Queries &gt; Class Template Reference</div></div>
@@ -103,14 +104,14 @@ requires (!::std::same_as&lt;<a class="el" href="classbeman_1_1task_1_1detail_1_
 requires (!::std::same_as&lt;<a class="el" href="classbeman_1_1task_1_1detail_1_1any__env.html">any_env</a>, Env&gt; &amp;&amp; (::beman::task::detail::has_query_for&lt;Env, Queries&gt; &amp;&amp; ...))</td></tr>
 <tr class="memitem:a6290ed76894e2be14187bde19a6f36da"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classbeman_1_1task_1_1detail_1_1any__env.html">any_env</a> &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classbeman_1_1task_1_1detail_1_1any__env.html#a6290ed76894e2be14187bde19a6f36da">operator=</a> (Env env) noexcept</td></tr>
 <tr class="separator:a6290ed76894e2be14187bde19a6f36da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05ba0cc3b88e0d062198983ca0f4f3f3"><td class="memTemplParams" colspan="2">template&lt;class... Args&gt; </td></tr>
-<tr class="memitem:a05ba0cc3b88e0d062198983ca0f4f3f3"><td class="memTemplItemLeft" align="right" valign="top">requires ::beman::task::detail::queryable_with&lt; <a class="el" href="classbeman_1_1task_1_1detail_1_1env__interface.html">beman::task::detail::env_interface</a>&lt; Queries... &gt;, Args... &gt; auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classbeman_1_1task_1_1detail_1_1any__env.html#a05ba0cc3b88e0d062198983ca0f4f3f3">query</a> (Args &amp;&amp;... args) const noexcept</td></tr>
-<tr class="separator:a05ba0cc3b88e0d062198983ca0f4f3f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addbeeeca413f13678cd3adfc3b047956"><td class="memTemplParams" colspan="2">template&lt;class... Args&gt; </td></tr>
+<tr class="memitem:addbeeeca413f13678cd3adfc3b047956"><td class="memTemplItemLeft" align="right" valign="top">requires ::beman::task::detail::queryable_with&lt; env_interface, Args... &gt; auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classbeman_1_1task_1_1detail_1_1any__env.html#addbeeeca413f13678cd3adfc3b047956">query</a> (Args &amp;&amp;... args) const noexcept</td></tr>
+<tr class="separator:addbeeeca413f13678cd3adfc3b047956"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;class... Queries&gt;<br />
 class beman::task::detail::any_env&lt; Queries &gt;</div>
-<p class="definition">Definition at line <a class="el" href="any__env_8hpp_source.html#l00016">16</a> of file <a class="el" href="any__env_8hpp_source.html">any_env.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="any__env_8hpp_source.html#l00014">14</a> of file <a class="el" href="any__env_8hpp_source.html">any_env.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a8c6d999fec8759589c68fe1a6c02f975" name="a8c6d999fec8759589c68fe1a6c02f975"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8c6d999fec8759589c68fe1a6c02f975">&#9670;&#160;</a></span>any_env()</h2>
@@ -141,7 +142,7 @@ requires (!::std::same_as&lt;<a class="el" href="classbeman_1_1task_1_1detail_1_
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="any__env_8hpp_source.html#l00029">29</a> of file <a class="el" href="any__env_8hpp_source.html">any_env.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="any__env_8hpp_source.html#l00058">58</a> of file <a class="el" href="any__env_8hpp_source.html">any_env.hpp</a>.</p>
 
 </div>
 </div>
@@ -175,12 +176,12 @@ requires (!::std::same_as&lt;<a class="el" href="classbeman_1_1task_1_1detail_1_
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="any__env_8hpp_source.html#l00039">39</a> of file <a class="el" href="any__env_8hpp_source.html">any_env.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="any__env_8hpp_source.html#l00067">67</a> of file <a class="el" href="any__env_8hpp_source.html">any_env.hpp</a>.</p>
 
 </div>
 </div>
-<a id="a05ba0cc3b88e0d062198983ca0f4f3f3" name="a05ba0cc3b88e0d062198983ca0f4f3f3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a05ba0cc3b88e0d062198983ca0f4f3f3">&#9670;&#160;</a></span>query()</h2>
+<a id="addbeeeca413f13678cd3adfc3b047956" name="addbeeeca413f13678cd3adfc3b047956"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#addbeeeca413f13678cd3adfc3b047956">&#9670;&#160;</a></span>query()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -193,7 +194,7 @@ template&lt;class... Args&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">requires ::beman::task::detail::queryable_with&lt; <a class="el" href="classbeman_1_1task_1_1detail_1_1env__interface.html">beman::task::detail::env_interface</a>&lt; Queries... &gt;, Args... &gt; auto <a class="el" href="classbeman_1_1task_1_1detail_1_1any__env.html">beman::task::detail::any_env</a>&lt; Queries &gt;::query </td>
+          <td class="memname">requires ::beman::task::detail::queryable_with&lt; env_interface, Args... &gt; auto <a class="el" href="classbeman_1_1task_1_1detail_1_1any__env.html">beman::task::detail::any_env</a>&lt; Queries &gt;::query </td>
           <td>(</td>
           <td class="paramtype">Args &amp;&amp;...&#160;</td>
           <td class="paramname"><em>args</em></td><td>)</td>
@@ -207,7 +208,7 @@ template&lt;class... Args&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="any__env_8hpp_source.html#l00051">51</a> of file <a class="el" href="any__env_8hpp_source.html">any_env.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="any__env_8hpp_source.html#l00077">77</a> of file <a class="el" href="any__env_8hpp_source.html">any_env.hpp</a>.</p>
 
 </div>
 </div>
