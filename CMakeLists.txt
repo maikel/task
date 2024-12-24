@@ -34,9 +34,6 @@ target_sources(beman_task
       "${CMAKE_CURRENT_LIST_DIR}/src/beman/task/task.hpp"
       "${CMAKE_CURRENT_LIST_DIR}/src/beman/task/detail/any_env.hpp"
       "${CMAKE_CURRENT_LIST_DIR}/src/beman/task/detail/any_scheduler.hpp"
-      "${CMAKE_CURRENT_LIST_DIR}/src/beman/task/detail/env_implementation.hpp"
-      "${CMAKE_CURRENT_LIST_DIR}/src/beman/task/detail/env_interface.hpp"
-      "${CMAKE_CURRENT_LIST_DIR}/src/beman/task/detail/env_wrapper.hpp"
       "${CMAKE_CURRENT_LIST_DIR}/src/beman/task/detail/join_envs.hpp"
       "${CMAKE_CURRENT_LIST_DIR}/src/beman/task/detail/manual_lifetime.hpp"
       "${CMAKE_CURRENT_LIST_DIR}/src/beman/task/detail/query_base.hpp")
