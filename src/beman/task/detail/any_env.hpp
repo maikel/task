@@ -79,10 +79,9 @@ template <class... Queries> class any_env {
   }
 
  private:
-  template <class Derived, class Interface, class... Qs> class env_implmentation;
+  template <class Derived, class... Qs> class env_implmentation;
 
-  template <class Derived, class Interface>
-  class env_implmentation<Derived, Interface> : public Interface {
+  template <class Derived> class env_implmentation<Derived> : public env_interface {
    public:
     env_implmentation() noexcept = default;
     env_implmentation(const env_implmentation&) = default;
@@ -94,9 +93,8 @@ template <class... Queries> class any_env {
     ~env_implmentation() = default;
   };
 
-  template <class Derived, class Interface, class Ret, class... Args, class... Qs>
-  class env_implmentation<Derived, Interface, Ret(Args...), Qs...>
-      : public env_implmentation<Derived, Interface, Qs...> {
+  template <class Derived, class Ret, class... Args, class... Qs>
+  class env_implmentation<Derived, Ret(Args...), Qs...> : public env_implmentation<Derived, Qs...> {
    public:
     env_implmentation() noexcept = default;
     env_implmentation(const env_implmentation&) = default;
@@ -113,7 +111,7 @@ template <class... Queries> class any_env {
   };
 
   template <class Env>
-  class env_wrapper final : public env_implmentation<env_wrapper<Env>, env_interface, Queries...> {
+  class env_wrapper final : public env_implmentation<env_wrapper<Env>, Queries...> {
    public:
     explicit env_wrapper(Env env) noexcept
         : env_{std::move(env)} {}
