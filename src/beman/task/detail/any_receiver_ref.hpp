@@ -73,7 +73,7 @@ class any_receiver_ref<::beman::execution26::completion_signatures<Sigs...>, Env
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Woverloaded-virtual"
-    void set_complete(Tag tag, Args... args) noexcept override final {
+    void set_complete(Tag tag, Args... args) noexcept final {
       Receiver* receiver = static_cast<Derived*>(this)->receiver_;
       tag(std::move(*receiver), std::forward<Args>(args)...);
     }
