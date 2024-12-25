@@ -26,7 +26,7 @@ Checks:
     -*-use-equals-default,
     -*-braces-around-statements
 '
-WarningsAsErrors: 'clang*'
+WarningsAsErrors: '*'
 FormatStyle: file
 
 CheckOptions:
