@@ -152,7 +152,7 @@ $(function() {
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
 <div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="preprocessor">#</span><span class="preprocessor">pragma</span> <span class="preprocessor">clang</span> <span class="preprocessor">diagnostic</span> <span class="preprocessor">push</span></div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="preprocessor">#</span><span class="preprocessor">pragma</span> <span class="preprocessor">clang</span> <span class="preprocessor">diagnostic</span> <span class="preprocessor">ignored</span> <span class="stringliteral">&quot;-Woverloaded-virtual&quot;</span></div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    <span class="keywordtype">void</span> set_complete(Tag tag, Args... args) <span class="keyword">noexcept</span> override final {</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    <span class="keywordtype">void</span> set_complete(Tag tag, Args... args) <span class="keyword">noexcept</span> final {</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>      Receiver* receiver = <span class="keyword">static_cast</span>&lt;Derived*&gt;(<span class="keyword">this</span>)-&gt;receiver_;</div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>      tag(std::move(*receiver), std::forward&lt;Args&gt;(args)...);</div>
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    }</div>
