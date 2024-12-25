@@ -15,6 +15,7 @@ on:
       - "Makefile"
       - "CMakePresets.json"
       - "CMakeLists.txt"
+      - ".clang-tidy"
       - ".github/workflows/linux.yml"
   pull_request:
     branches: ["main"]
@@ -27,6 +28,7 @@ on:
       - "Makefile"
       - "CMakePresets.json"
       - "CMakeLists.txt"
+      - ".clang-tidy"
       - ".github/workflows/linux.yml"
 
 jobs:
