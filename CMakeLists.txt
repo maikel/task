@@ -17,6 +17,15 @@ if (NOT CXX23_SUPPORTED)
   message(FATAL "C++23 support is required")
 endif()
 
+include(FetchContent)
+FetchContent_Declare(
+    execution26
+    # for local development, use SOURCE_DIR <path-to>/execution26
+    GIT_REPOSITORY https://github.com/bemanproject/execution26
+    GIT_TAG 752882e
+)
+FetchContent_MakeAvailable(execution26)
+
 # Add the beman::execution26 target if it is not already defined
 if (NOT TARGET beman::execution26)
   find_package(beman_execution26 REQUIRED)
