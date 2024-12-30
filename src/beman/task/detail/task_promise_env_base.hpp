@@ -29,28 +29,32 @@ template <class Tp, class Context> class task_promise_env_base {
     ~receiver_base() = default;
   };
 
-  task_promise_env_base() noexcept = default;
+  task_promise_env_base() noexcept
+      : receiver_{nullptr} {}
 
   void connect(receiver_base& receiver) noexcept { this->receiver_ = &receiver; }
 
   auto get_env() const noexcept {
-    assert(this->receiver_);
+    assert(this->receiver_); // NOLINT
     return this->receiver_->get_env();
   }
 
   template <class Self, class Value> auto await_transform(this Self& self, Value&& value) {
-    if constexpr (requires(Self& slf, Value&& val) {
-                    { Context::await_transform(::std::forward<Value>(val), slf.get_env()) };
+    return ::beman::execution26::as_awaitable(self.do_await_transform(::std::forward<Value>(value)),
+                                              self);
+  }
+
+  template <class Value> auto do_await_transform(Value&& value) const {
+    if constexpr (requires {
+                    { Context::await_transform(::std::forward<Value>(value), this->get_env()) };
                   }) {
-      assert(self.receiver_);
-      return ::beman::execution26::as_awaitable(
-          Context::await_transform(::std::forward<Value>(value), self.get_env()), self);
+      return Context::await_transform(::std::forward<Value>(value), this->get_env());
     } else {
-      return ::beman::execution26::as_awaitable(::std::forward<Value>(value), self);
+      return ::std::forward<Value>(value);
     }
   }
 
-  receiver_base* receiver_;
+  receiver_base* receiver_ = nullptr;
 };
 
 } // namespace beman::task::detail

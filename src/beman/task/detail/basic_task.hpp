@@ -125,6 +125,8 @@ template <class Ret, class Context>
 class basic_task<Ret, Context>::promise_type
     : public ::beman::task::detail::task_promise_result_base<Ret, Context> {
  public:
+  promise_type() noexcept = default;
+
   auto unhandled_stopped() noexcept -> ::std::coroutine_handle<> {
     this->receiver_->set_stopped();
     return ::std::noop_coroutine();

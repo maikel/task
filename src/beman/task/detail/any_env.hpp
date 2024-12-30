@@ -98,9 +98,9 @@ template <class... Queries> class any_env {
    public:
     env_implmentation() noexcept {}
     env_implmentation(const env_implmentation&) noexcept {}
-    env_implmentation& operator=(const env_implmentation&) noexcept {}
+    env_implmentation& operator=(const env_implmentation&) noexcept { return *this; } // NOLINT
     env_implmentation(env_implmentation&&) noexcept {}
-    env_implmentation& operator=(env_implmentation&&) noexcept {}
+    env_implmentation& operator=(env_implmentation&&) noexcept { return *this; } // NOLINT
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Woverloaded-virtual"
