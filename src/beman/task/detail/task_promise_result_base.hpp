@@ -11,8 +11,8 @@
 #include <variant>
 
 namespace beman::task::detail {
-template <class Ret, class CompletionSigs, class... Queries>
-class task_promise_result_base : public task_promise_env_base<CompletionSigs, Queries...> {
+template <class Ret, class Context>
+class task_promise_result_base : public task_promise_env_base<Ret, Context> {
  public:
   task_promise_result_base() noexcept = default;
 
@@ -22,11 +22,11 @@ class task_promise_result_base : public task_promise_env_base<CompletionSigs, Qu
 
   void unhandled_exception() noexcept { this->set_exception(::std::current_exception()); }
 
-  void set_complete() && noexcept {
+  void do_complete() && noexcept {
     try {
-      ::beman::execution26::set_value(::std::move(this->receiver_), get_result());
+      this->receiver_->set_value(this->get_result());
     } catch (...) {
-      ::beman::execution26::set_error(::std::move(this->receiver_), ::std::current_exception());
+      this->receiver_->set_error(::std::current_exception());
     }
   }
 
@@ -56,9 +56,8 @@ class task_promise_result_base : public task_promise_env_base<CompletionSigs, Qu
   ::std::variant<empty_result_t, Ret, ::std::exception_ptr> result_{};
 };
 
-template <class CompletionSigs, class... Queries>
-class task_promise_result_base<void, CompletionSigs, Queries...>
-    : public task_promise_env_base<CompletionSigs, Queries...> {
+template <class Context>
+class task_promise_result_base<void, Context> : public task_promise_env_base<void, Context> {
  public:
   task_promise_result_base() noexcept = default;
 
@@ -66,12 +65,12 @@ class task_promise_result_base<void, CompletionSigs, Queries...>
 
   void unhandled_exception() noexcept { this->set_exception(::std::current_exception()); }
 
-  void set_complete() && noexcept {
+  void do_complete() && noexcept {
     try {
       this->get_result();
-      ::beman::execution26::set_value(::std::move(this->receiver_));
+      this->receiver_->set_value(::beman::task::detail::void_t{});
     } catch (...) {
-      ::beman::execution26::set_error(::std::move(this->receiver_), ::std::current_exception());
+      this->receiver_->set_error(::std::current_exception());
     }
   }
 
@@ -94,4 +93,4 @@ class task_promise_result_base<void, CompletionSigs, Queries...>
 };
 } // namespace beman::task::detail
 
-#endif
+#endif // BEMAN_TASK_DETAIL_TASK_PROMISE_RESULT_BASE_HPP

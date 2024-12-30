@@ -49,6 +49,16 @@ auto test_await_an_int_task() noexcept {
 }
 } // namespace
 
+void* operator new(std::size_t size) {
+  void* pointer(std::malloc(size));
+  std::cout << "global new(" << size << ")->" << pointer << "\n";
+  return pointer;
+}
+void operator delete(void* pointer) noexcept {
+  std::cout << "global delete(" << pointer << ")\n";
+  return std::free(pointer);
+}
+
 int main() {
   test_void_task();
   test_int_task();
