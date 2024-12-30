@@ -25,6 +25,10 @@ template <class Tp> class manual_lifetime {
 
   constexpr const Tp& get() const noexcept { return storage_.value_; }
 
+  constexpr Tp* operator->() noexcept { return &storage_.value_; }
+
+  constexpr const Tp* operator->() const noexcept { return &storage_.value_; }
+
  private:
   struct empty_byte {};
   union Storage {

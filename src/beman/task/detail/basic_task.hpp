@@ -3,7 +3,6 @@
 #ifndef BEMAN_TASK_BASIC_TASK_HPP
 #define BEMAN_TASK_BASIC_TASK_HPP
 
-#include <beman/task/detail/any_env.hpp>
 #include <beman/task/detail/as_exception_ptr.hpp>
 #include <beman/task/detail/join_envs.hpp>
 #include <beman/task/detail/manual_lifetime.hpp>
@@ -19,19 +18,22 @@
 #include <variant>
 
 namespace beman::task {
-template <class Ret, class... Queries> class basic_task {
+template <class Ret, class Context> class basic_task {
  public:
   class promise_type;
 
  private:
-  template <class Receiver> class operation {
+  template <class Receiver>
+  class operation final
+      : public ::beman::task::detail::task_promise_env_base<Ret, Context>::receiver_base {
    public:
     using operation_state_concept = ::beman::execution26::operation_state_t;
 
     explicit operation(::std::coroutine_handle<promise_type> handle, Receiver receiver) noexcept
-        : receiver_{receiver}
+        : receiver_{std::move(receiver)}
         , handle_{handle} {
-      handle_.promise().connect(this->receiver_);
+      context_.emplace(receiver_);
+      handle_.promise().connect(*this);
     }
 
     operation(const operation&) = delete;
@@ -45,62 +47,34 @@ template <class Ret, class... Queries> class basic_task {
       }
     }
 
-    void start() noexcept {
-      receiver_.start();
-      handle_.resume();
-    }
+    void start() noexcept { handle_.resume(); }
 
    private:
-    struct task_receiver {
-      using receiver_concept = ::beman::execution26::receiver_t;
-
-      explicit task_receiver(Receiver receiver) noexcept
-          : receiver_{std::move(receiver)} {}
-
-      template <class... Args> void set_value(Args&&... args) && noexcept {
-        this->stop_callback_.reset();
-        ::beman::execution26::set_value(std::move(this->receiver_), std::forward<Args>(args)...);
+    void set_value(::beman::task::detail::value_or_void_t<Ret> value) noexcept override {
+      context_.reset();
+      if constexpr (::std::is_void_v<Ret>) {
+        ::beman::execution26::set_value(std::move(this->receiver_));
+      } else {
+        ::beman::execution26::set_value(std::move(this->receiver_), std::move(value));
       }
+    }
 
-      void set_error(const std::exception_ptr& err) && noexcept {
-        this->stop_callback_.reset();
-        ::beman::execution26::set_error(std::move(this->receiver_), err);
-      }
+    void set_error(const std::exception_ptr& err) noexcept override {
+      context_.reset();
+      ::beman::execution26::set_error(std::move(this->receiver_), err);
+    }
 
-      void set_stopped() && noexcept {
-        this->stop_callback_.reset();
-        ::beman::execution26::set_stopped(std::move(this->receiver_));
-      }
+    void set_stopped() noexcept override {
+      context_.reset();
+      ::beman::execution26::set_stopped(std::move(this->receiver_));
+    }
 
-      auto get_env() const noexcept {
-        return ::beman::task::detail::join_envs(
-            ::beman::execution26::get_env(this->receiver_),
-            ::beman::task::detail::with_query(::beman::execution26::get_stop_token,
-                                              this->stop_source_.get_token()));
-      }
+    auto get_env() const noexcept -> typename Context::env_type override {
+      return context_->get_env();
+    }
 
-      struct callback_type {
-        task_receiver& self;
-        void operator()() const noexcept { this->self.stop_source_.request_stop(); }
-      };
-
-      using stop_token_type =
-          ::beman::execution26::stop_token_of_t<::beman::execution26::env_of_t<Receiver>>;
-      using stop_callback_type =
-          ::beman::execution26::stop_callback_for_t<stop_token_type, callback_type>;
-
-      void start() noexcept {
-        auto stop_token =
-            ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver_));
-        this->stop_callback_.emplace(stop_token, callback_type{*this});
-      }
-
-      Receiver receiver_;
-      ::beman::execution26::inplace_stop_source stop_source_{};
-      [[no_unique_address]]
-      ::beman::task::detail::manual_lifetime<stop_callback_type> stop_callback_{};
-    };
-    task_receiver receiver_;
+    Receiver receiver_;
+    ::beman::task::detail::manual_lifetime<typename Context::template type<Receiver>> context_;
     ::std::coroutine_handle<promise_type> handle_{};
   };
 
@@ -135,10 +109,7 @@ template <class Ret, class... Queries> class basic_task {
   }
 
   template <class Receiver>
-    requires ::beman::execution26::receiver_of<Receiver, completion_signatures> &&
-                 (::beman::task::detail::has_query_for<::beman::execution26::env_of_t<Receiver>,
-                                                       Queries> &&
-                  ...)
+    requires ::beman::execution26::receiver_of<Receiver, completion_signatures>
   auto connect(Receiver receiver) && noexcept -> operation<Receiver> {
     return operation<Receiver>{std::exchange(handle_, {}), ::std::move(receiver)};
   }
@@ -150,13 +121,14 @@ template <class Ret, class... Queries> class basic_task {
   ::std::coroutine_handle<promise_type> handle_{};
 };
 
-template <class Ret, class... Queries>
-class basic_task<Ret, Queries...>::promise_type
-    : public ::beman::task::detail::task_promise_result_base<Ret, basic_task::completion_signatures,
-                                                             Queries...> {
+template <class Ret, class Context>
+class basic_task<Ret, Context>::promise_type
+    : public ::beman::task::detail::task_promise_result_base<Ret, Context> {
  public:
+  promise_type() noexcept = default;
+
   auto unhandled_stopped() noexcept -> ::std::coroutine_handle<> {
-    ::beman::execution26::set_stopped(std::move(this->receiver_));
+    this->receiver_->set_stopped();
     return ::std::noop_coroutine();
   }
 
@@ -171,7 +143,7 @@ class basic_task<Ret, Queries...>::promise_type
 
     void await_suspend(::std::coroutine_handle<promise_type> h) noexcept {
       promise_type& promise = h.promise();
-      std::move(promise).set_complete();
+      std::move(promise).do_complete();
     }
 
     void await_resume() noexcept {}
