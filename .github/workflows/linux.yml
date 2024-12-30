@@ -62,14 +62,7 @@ jobs:
       - name: Install build tools
         run: |
           apt-get update -y -q
-          apt-get install cppcheck ninja-build -y -q
-
-      - name: Linux execution26 ${{ matrix.compiler }} ${{ matrix.preset }}
-        run: |
-          cd execution26
-          cmake --preset ${{ matrix.preset }} . -DCMAKE_GENERATOR="Ninja" -DCMAKE_CXX_COMPILER=clang++-19 -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_INSTALL_PREFIX="/usr/local"
-          cmake --build build/${{ matrix.preset }} --target execution26
-          cmake --install build/${{ matrix.preset }}
+          apt-get install cppcheck ninja-build git -y -q
 
       - name: Linux task29 ${{ matrix.compiler }} ${{ matrix.preset }}
         run: |
