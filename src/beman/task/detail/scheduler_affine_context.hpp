@@ -18,7 +18,7 @@ template <class... Queries> struct scheduler_affine_context {
       ::beman::execution26::inplace_stop_token(::beman::execution26::get_stop_token_t), //
       Queries...>;
 
-  template <class Receiver> class type;
+  template <class Receiver> class operation_state_context;
 
   template <class Awaitable> static auto await_transform(Awaitable awaitable, const env_type& env) {
     return ::beman::execution26::continues_on(std::move(awaitable),
@@ -28,25 +28,38 @@ template <class... Queries> struct scheduler_affine_context {
 
 template <class... Queries>
 template <class Receiver>
-class scheduler_affine_context<Queries...>::type {
+class scheduler_affine_context<Queries...>::operation_state_context {
  public:
   using env_type = typename scheduler_affine_context<Queries...>::env_type;
 
-  explicit type(const Receiver& receiver) noexcept {
-    auto env = ::beman::execution26::get_env(receiver);
-    stop_callback_.emplace(
-        ::beman::execution26::get_stop_token(::beman::execution26::get_env(receiver)),
-        callback_type{*this});
-    env_ = ::beman::task::detail::join_envs(
-        env, ::beman::task::detail::with_query(::beman::execution26::get_stop_token,
-                                               stop_source_.get_token()));
-  }
+  struct env_t {
+    const operation_state_context* self;
 
-  auto get_env() const noexcept -> const env_type& { return env_; }
+    template <class Query>
+      requires ::beman::task::detail::queryable_with<env_type, Query>
+    auto query(Query query) const noexcept {
+      return query(self->env_);
+    }
+
+    auto query(::beman::execution26::get_stop_token_t) const noexcept
+        -> ::beman::execution26::inplace_stop_token {
+      return self->stop_source_.get_token();
+    }
+  };
+
+  explicit operation_state_context(const Receiver& receiver) noexcept
+      : operation_state_context(receiver, ::beman::execution26::get_env(receiver)) {}
+
+  explicit operation_state_context(const Receiver&,
+                                   ::beman::execution26::env_of_t<Receiver> env) noexcept
+      : env_{env}
+      , stop_callback_(::beman::execution26::get_stop_token(env), callback_type{*this}) {}
+
+  auto get_env() const noexcept -> env_type { return env_type(env_t{this}); }
 
  private:
   struct callback_type {
-    type& self;
+    operation_state_context& self;
     void operator()() const noexcept { this->self.stop_source_.request_stop(); }
   };
 
@@ -56,8 +69,8 @@ class scheduler_affine_context<Queries...>::type {
       ::beman::execution26::stop_callback_for_t<stop_token_type, callback_type>;
 
   ::beman::execution26::inplace_stop_source stop_source_{};
-  ::beman::task::detail::manual_lifetime<stop_callback_type> stop_callback_{};
-  env_type env_{};
+  ::beman::execution26::env_of_t<Receiver> env_;
+  stop_callback_type stop_callback_;
 };
 
 } // namespace beman::task

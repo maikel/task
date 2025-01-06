@@ -16,6 +16,9 @@ template <class Tag, class Value> auto with_query(Tag, Value&& value) {
   return env_t{std::forward<Value>(value)};
 }
 
+template <class Tag, class Value>
+using with_query_t = decltype(with_query(Tag{}, std::declval<Value>()));
+
 } // namespace beman::task::detail
 
 #endif // BEMAN_TASK_DETAIL_WITH_QUERY_HPP

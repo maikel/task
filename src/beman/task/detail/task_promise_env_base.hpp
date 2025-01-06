@@ -11,8 +11,6 @@
 #include <exception>
 
 namespace beman::task::detail {
-template <class...> class types;
-
 template <class Tp, class Context> class task_promise_env_base {
  public:
   class receiver_base : public task_receiver_interface<Tp> {

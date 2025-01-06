@@ -74,7 +74,9 @@ template <class Ret, class Context> class basic_task {
     }
 
     Receiver receiver_;
-    ::beman::task::detail::manual_lifetime<typename Context::template type<Receiver>> context_;
+    ::beman::task::detail::manual_lifetime<
+        typename Context::template operation_state_context<Receiver>>
+        context_;
     ::std::coroutine_handle<promise_type> handle_{};
   };
 
