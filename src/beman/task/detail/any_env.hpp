@@ -96,15 +96,18 @@ template <class... Queries> class any_env {
   template <class Derived, class Ret, class... Args, class... Qs>
   class env_implmentation<Derived, Ret(Args...), Qs...> : public env_implmentation<Derived, Qs...> {
    public:
-    env_implmentation() noexcept = default;
-    env_implmentation(const env_implmentation&) = default;
-    env_implmentation& operator=(const env_implmentation&) = default;
-    env_implmentation(env_implmentation&&) = default;
-    env_implmentation& operator=(env_implmentation&&) = default;
+    env_implmentation() noexcept {}
+    env_implmentation(const env_implmentation&) noexcept {}
+    env_implmentation& operator=(const env_implmentation&) noexcept { return *this; } // NOLINT
+    env_implmentation(env_implmentation&&) noexcept {}
+    env_implmentation& operator=(env_implmentation&&) noexcept { return *this; } // NOLINT
 
-    Ret query(Args... args) const noexcept override {
-      return static_cast<const Derived*>(this)->do_query(::std::forward<Args>(args)...);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Woverloaded-virtual"
+    Ret query(Args... args) const noexcept final {
+      return Ret(static_cast<const Derived*>(this)->do_query(::std::forward<Args>(args)...));
     }
+#pragma clang diagnostic pop
 
    protected:
     ~env_implmentation() = default;

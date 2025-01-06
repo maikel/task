@@ -45,9 +45,10 @@ class any_scheduler {
         ::beman::execution26::set_value_t(), ::beman::execution26::set_error_t(std::exception_ptr),
         ::beman::execution26::set_stopped_t()>;
 
-    using any_receiver_ref =
-        ::beman::task::detail::any_receiver_ref<completion_signatures,
-                                                ::beman::execution26::empty_env>;
+    using any_receiver_ref = ::beman::task::detail::any_receiver_ref<
+        completion_signatures,
+        ::beman::task::detail::with_query_t<::beman::execution26::get_stop_token_t,
+                                            ::beman::execution26::inplace_stop_token>>;
 
     sender_interface() noexcept = default;
     sender_interface(const sender_interface&) = default;
@@ -68,9 +69,7 @@ class any_scheduler {
 
     auto connect(sender_interface::any_receiver_ref receiver)
         -> std::unique_ptr<operation_interface> override {
-      using Receiver =
-          ::beman::task::detail::any_receiver_ref<sender_interface::completion_signatures,
-                                                  ::beman::execution26::empty_env>;
+      using Receiver = sender_interface::any_receiver_ref;
       return std::make_unique<operation_implementation<Sender, Receiver>>(std::move(sender_),
                                                                           std::move(receiver));
     }
@@ -92,67 +91,61 @@ class any_scheduler {
 
     schedule_operation(std::unique_ptr<sender_interface> sender, Receiver receiver)
         : receiver_(std::move(receiver))
-        , operation_(sender->connect(sender_interface::any_receiver_ref{receiver_})) {}
+        , receiver_ref_{this}
+        , operation_(sender->connect(sender_interface::any_receiver_ref{receiver_ref_})) {}
 
    private:
-    class receiver_ref {
+    class receiver_ref final : public sender_interface::any_receiver_ref::receiver_interface {
      public:
-      using receiver_concept = ::beman::execution26::receiver_t;
+      explicit receiver_ref(schedule_operation* op) noexcept
+          : self(op) {}
 
-      struct callback_type {
-        receiver_ref& ref_;
-        void operator()() const noexcept { ref_.stop_source_.request_stop(); }
-      };
-
-      using stop_token_type =
-          ::beman::execution26::stop_token_of_t<::beman::execution26::env_of_t<Receiver>>;
-
-      using stop_callback_type =
-          ::beman::execution26::stop_callback_for_t<stop_token_type, callback_type>;
-
-      explicit receiver_ref(Receiver receiver) noexcept
-          : receiver_(std::move(receiver)) {}
-
-      void start() noexcept {
-        stop_token_type token =
-            ::beman::execution26::get_stop_token(::beman::execution26::get_env(receiver_));
-        stop_callback_.emplace(token, callback_type{*this});
+      void set_complete(::beman::execution26::set_value_t) noexcept override {
+        self->stop_callback_.reset();
+        ::beman::execution26::set_value(std::move(self->receiver_));
       }
 
-      template <class... Args> void set_value(Args&&... args) && noexcept {
-        stop_callback_.reset();
-        ::beman::execution26::set_value(std::move(receiver_), std::forward<Args>(args)...);
+      void set_complete(::beman::execution26::set_error_t,
+                        std::exception_ptr error) noexcept override {
+        self->stop_callback_.reset();
+        ::beman::execution26::set_error(std::move(self->receiver_), std::move(error));
       }
 
-      template <class Error> void set_error(Error&& error) && noexcept {
-        stop_callback_.reset();
-        ::beman::execution26::set_error(std::move(receiver_), std::forward<Error>(error));
+      void set_complete(::beman::execution26::set_stopped_t) noexcept override {
+        self->stop_callback_.reset();
+        ::beman::execution26::set_stopped(std::move(self->receiver_));
       }
 
-      void set_stopped() && noexcept {
-        stop_callback_.reset();
-        ::beman::execution26::set_stopped(std::move(receiver_));
+      auto get_env() const noexcept -> ::beman::task::detail::with_query_t<
+          ::beman::execution26::get_stop_token_t,
+          ::beman::execution26::inplace_stop_token> override {
+        return ::beman::task::detail::with_query(::beman::execution26::get_stop_token,
+                                                 self->stop_source_.get_token());
       }
 
-      auto get_env() const noexcept {
-        return ::beman::task::detail::join_envs(
-            ::beman::execution26::get_env(receiver_),
-            ::beman::task::detail::with_query(::beman::execution26::get_stop_token,
-                                              this->stop_source_.get_token()));
-      }
-
-      Receiver receiver_;
-      ::beman::execution26::inplace_stop_source stop_source_;
-      [[no_unique_address]]
-      ::beman::task::detail::manual_lifetime<stop_callback_type> stop_callback_;
+      schedule_operation* self;
     };
 
     void start() noexcept {
-      receiver_.start();
+      stop_token_type token =
+          ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver_));
+      this->stop_callback_.emplace(
+          token, ::beman::execution26::detail::on_stop_request{this->stop_source_});
       operation_->start();
     }
 
-    receiver_ref receiver_;
+    using stop_token_type =
+        ::beman::execution26::stop_token_of_t<::beman::execution26::env_of_t<Receiver>>;
+
+    using stop_callback_type = ::beman::execution26::stop_callback_for_t<
+        stop_token_type,
+        ::beman::execution26::detail::on_stop_request<::beman::execution26::inplace_stop_source>>;
+
+    Receiver receiver_;
+    ::beman::execution26::inplace_stop_source stop_source_;
+    [[no_unique_address]]
+    ::beman::task::detail::manual_lifetime<stop_callback_type> stop_callback_;
+    receiver_ref receiver_ref_;
     std::unique_ptr<operation_interface> operation_;
   };
 
@@ -237,8 +230,8 @@ class any_scheduler {
 
     auto operator=(const scheduler_implementation& other) -> scheduler_implementation& = default;
 
-    auto
-    operator=(scheduler_implementation&& other) noexcept -> scheduler_implementation& = default;
+    auto operator=(scheduler_implementation&& other) noexcept
+        -> scheduler_implementation& = default;
 
     ~scheduler_implementation() override = default;
 
